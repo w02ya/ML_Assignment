@@ -1,0 +1,52 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+
+# 데이터 불러오기
+dataset = pd.read_csv('students_ml.csv', encoding='utf-8')
+
+# 데이터 전처리: '공부시간'의 결측치를 중앙값으로 대체
+median_study_time = dataset['공부시간'].median()
+dataset['공부시간'] = dataset['공부시간'].fillna(median_study_time)
+
+# 특성(X)과 타겟(y) 분리
+# 입력 특성 3개: 공부시간, 출석일수, 이전시험
+X = dataset[['공부시간', '출석일수', '이전시험']].values
+y = dataset['총점'].values
+
+# 학습 데이터와 테스트 데이터 분할
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Scikit-learn 선형 회귀 모델 생성 및 학습
+regressor = LinearRegression()
+regressor.fit(X_train, y_train)
+
+# 다중 선형 회귀식 확인
+weights = regressor.coef_
+intercept = regressor.intercept_
+print(f"예측 총점 = ({weights[0]:.2f} * 공부시간) + ({weights[1]:.2f} * 출석일수) + ({weights[2]:.2f} * 이전시험) + {intercept:.2f}")
+
+# 예측 및 MSE 성능 평가
+y_pred = regressor.predict(X_test)
+result = mean_squared_error(y_test, y_pred)
+print(f"MSE: {result}")
+
+
+# 시각화
+plt.rc('font', family='Malgun Gothic') # 윈도우 한글 폰트 설정
+plt.figure(figsize=(8, 6))
+plt.scatter(y_test, y_pred, color='blue', alpha=0.7, label='예측 점수')
+
+## 완벽한 예측을 의미하는 기준선(y=x) 그리기
+min_val = min(min(y_test), min(y_pred))
+max_val = max(max(y_test), max(y_pred))
+plt.plot([min_val, max_val], [min_val, max_val], color='red', linestyle='--', label='완벽한 예측 (정답)')
+
+plt.title('다중 선형 회귀 모델 평가: 실제 총점 vs 예측 총점')
+plt.xlabel('실제 총점 (y_test)')
+plt.ylabel('모델이 예측한 총점 (y_pred)')
+plt.legend()
+plt.grid(True)
+plt.show()
